@@ -2,10 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface UserAuth {
+  id: number;
   name: string;
   email: string;
-  objectId: string;
-  userToken: string;
+  image: string | null;
+  role: string;
+  accessToken: string;
 }
 
 type Store = {

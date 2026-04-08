@@ -4,7 +4,7 @@ import { BookOpen, Lock, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router";
-import { axiosInstance } from "../lib/axios";
+import { axiosInstance2 } from "../lib/axios";
 import { loginSchema, type LoginSchema } from "../schemas/loginSchema";
 import { useAuth } from "../stores/useAuth";
 
@@ -22,14 +22,21 @@ function Login() {
 
   const { mutateAsync: loginMutation, isPending } = useMutation({
     mutationFn: async (payload: LoginSchema) => {
-      const response = await axiosInstance.post("/users/login", {
-        login: payload.email,
+      const response = await axiosInstance2.post("/auth/login", {
+        email: payload.email,
         password: payload.password,
       });
       return response.data;
     },
     onSuccess: (response) => {
-      login(response);
+      login({
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        image: response.user.image,
+        role: response.user.role,
+        accessToken: response.accessToken,
+      });
       toast.success("Login success!");
       navigate("/");
     },
