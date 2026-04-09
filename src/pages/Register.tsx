@@ -1,17 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookOpen, Lock, Mail, User } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { axiosInstance } from "../lib/axios";
-import toast from "react-hot-toast";
 import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+import { axiosInstance2 } from "../lib/axios";
+import type { AxiosError } from "axios";
 
 const formSchema = z
   .object({
     name: z.string().min(2, { message: "Name must be at least 2 characters" }),
     email: z.string().email("Invalid email"),
-    password: z.string().min(6, { message: "Password must be at least 6 chars" }),
+    password: z
+      .string()
+      .min(6, { message: "Password must be at least 6 chars" }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -34,7 +36,7 @@ function Register() {
 
   const { mutateAsync: registerMutation, isPending } = useMutation({
     mutationFn: async (payload: FormData) => {
-      await axiosInstance.post("/users/register", {
+      await axiosInstance2.post("/auth/register", {
         name: payload.name,
         email: payload.email,
         password: payload.password,
@@ -44,8 +46,8 @@ function Register() {
       toast.success("Register success!");
       navigate("/login");
     },
-    onError: () => {
-      toast.error("Register failed!");
+    onError: (error: AxiosError<{ massage : string}>) => {
+      toast.error(error.response?.data.massage || " Register failed");
     },
   });
 
