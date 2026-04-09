@@ -1,42 +1,42 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { BookOpen, Lock, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { axiosInstance } from "../lib/axios";
-import { useAuth } from "../stores/useAuth";
 import toast from "react-hot-toast";
-import { useMutation } from "@tanstack/react-query";
-
-const formSchema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(1, { message: "Password is required" }),
-});
-
-type FormData = z.infer<typeof formSchema>;
+import { Link, useNavigate } from "react-router";
+import { axiosInstance2 } from "../lib/axios";
+import { loginSchema, type LoginSchema } from "../schema/loginSchema";
+import { useAuth } from "../stores/useAuth";
 
 function Login() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
   });
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const { mutateAsync: loginMutation, isPending } = useMutation({
-    mutationFn: async (payload: FormData) => {
-      const response = await axiosInstance.post("/users/login", {
-        login: payload.email,
+    mutationFn: async (payload: LoginSchema) => {
+      const response = await axiosInstance2.post("/auth/login", {
+        email: payload.email,
         password: payload.password,
       });
       return response.data;
     },
     onSuccess: (response) => {
-      login(response);
+      login({
+        id: response.user.id,
+        name: response.user.name,
+        email: response.user.email,
+        image: response.user.image,
+        role: response.user.role,
+        accesToken: response.accessToken,
+      });
       toast.success("Login success!");
       navigate("/");
     },
@@ -45,7 +45,7 @@ function Login() {
     },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: LoginSchema) => {
     await loginMutation(data);
   };
 
@@ -65,7 +65,10 @@ function Login() {
 
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Email Address
             </label>
             <div className="relative">
@@ -78,11 +81,18 @@ function Login() {
                 {...register("email")}
               />
             </div>
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Password
             </label>
             <div className="relative">
@@ -95,7 +105,11 @@ function Login() {
                 {...register("password")}
               />
             </div>
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           <button
