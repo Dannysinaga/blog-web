@@ -20,22 +20,23 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const { mutateAsync: loginMutation, isPending } = useMutation({
-    mutationFn: async (payload: LoginSchema) => {
+  const loginMutation = useMutation({
+    mutationFn: async (LoginSchema: { email: string; password: string }) => {
       const response = await axiosInstance2.post("/auth/login", {
-        email: payload.email,
-        password: payload.password,
+        email: LoginSchema.email,
+        password: LoginSchema.password,
       });
       return response.data;
     },
-    onSuccess: (response) => {
+    onSuccess: (response: any) => {
       login({
         id: response.user.id,
         name: response.user.name,
         email: response.user.email,
         image: response.user.image,
         role: response.user.role,
-        accesToken: response.accessToken,
+        accessToken: response.accessToken,   
+        refreshToken: response.refreshToken, 
       });
       toast.success("Login success!");
       navigate("/");
@@ -46,7 +47,7 @@ function Login() {
   });
 
   const onSubmit = async (data: LoginSchema) => {
-    await loginMutation(data);
+    await loginMutation.mutateAsync(data);
   };
 
   return (
@@ -114,10 +115,10 @@ function Login() {
 
           <button
             type="submit"
-            disabled={isPending}
+            disabled={loginMutation.isPending}
             className="w-full bg-yellow-500 text-white py-3 rounded-lg font-semibold hover:bg-purple-600 transition-colors shadow-md"
           >
-            {isPending ? "Loading" : "Login"}
+            {loginMutation.isPending ? "Loading" : "Login"}
           </button>
         </form>
 
