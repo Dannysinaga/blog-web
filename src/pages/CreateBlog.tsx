@@ -4,40 +4,12 @@ import { File as FileEdit, FileText, Image, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
-import z from "zod";
 import Navbar from "../components/Navbar";
-import { axiosInstance } from "../lib/axios";
-
-const formSchema = z.object({
-  title: z.string("Title is required").min(1, "Title cannot be empty"),
-  description: z
-    .string("Description is required")
-    .min(1, "Description cannot be empty"),
-  author: z.string("Author is required").min(1, "Author cannot be empty"),
-  thumbnail: z
-    .instanceof(File, { message: "Thumbnail must be a file" })
-    .refine((file) => file.size > 0, "Thumbnail is required"),
-  content: z.string("Content is required").min(1, "Content cannot be empty"),
-});
-
-type FormDataCreateBlog = z.infer<typeof formSchema>;
-
-const generateRandomString = (length: number = 10) => {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return result;
-};
-
-interface FileServiceResponse {
-  fileURL: string;
-  filePath: string;
-}
+import { axiosInstance2 } from "../lib/axios";
+import {
+  createBlogSchema,
+  type CreateBlogSchema,
+} from "../schemas/createBlogSchema";
 
 function CreateBlog() {
   const {
@@ -45,45 +17,34 @@ function CreateBlog() {
     handleSubmit,
     formState: { errors },
     setValue,
-  } = useForm<FormDataCreateBlog>({
-    resolver: zodResolver(formSchema),
+  } = useForm<CreateBlogSchema>({
+    resolver: zodResolver(createBlogSchema),
   });
 
   const navigate = useNavigate();
 
-const { mutateAsync: createBlogMutation, isPending } = useMutation({
-  mutationFn: async (payload: FormDataCreateBlog) => {
-    // step 1 -> masukin thumbnail ke file service
-    const form = new FormData();
-    form.append("file", payload.thumbnail);
+  const { mutateAsync: createBlogMutation, isPending } = useMutation({
+    mutationFn: async (payload: CreateBlogSchema) => {
+      const form = new FormData();
+      form.append("title", payload.title);
+      form.append("description", payload.description);
+      form.append("content", payload.content);
+      form.append("category", payload.category);
+      form.append("thumbnail", payload.thumbnail);
 
-    const folderName = "images";
-    const fileName = generateRandomString(10);
-    const response = await axiosInstance.post<FileServiceResponse>(
-      `/files/${folderName}/${fileName}`,
-      form,
-    );
+      await axiosInstance2.post("/blogs", form);
+    },
+    onSuccess: () => {
+      toast.success("Create Blog success");
+      navigate("/");
+    },
+    onError: () => {
+      toast.error("Create Blog failed");
+    },
+  });
 
-    // step 2 -> masukin data ke database table Blogs
-    await axiosInstance.post(`/data/Blogs`, {
-      thumbnail: response.data.fileURL,
-      author: payload.author,
-      description: payload.description,
-      title: payload.title,
-      content: payload.content,
-    });
-  },
-  onSuccess: () => {
-    toast.success("Create Blog success");
-    navigate("/");
-  },
-  onError: () => {
-    toast.error("Create Blog failed");
-  },
-});
-
-  const onSubmit = async (data: FormDataCreateBlog) => {
-      await createBlogMutation(data);
+  const onSubmit = async (data: CreateBlogSchema) => {
+    await createBlogMutation(data);
   };
 
   return (
@@ -148,24 +109,24 @@ const { mutateAsync: createBlogMutation, isPending } = useMutation({
 
             <div>
               <label
-                htmlFor="author"
+                htmlFor="category"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Author
+                Category
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  id="author"
+                  id="category"
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none transition"
-                  placeholder="Your name"
-                  {...register("author")}
+                  placeholder="Your category"
+                  {...register("category")}
                 />
 
-                {errors.author && (
+                {errors.category && (
                   <p className="text-red-500 text-sm mt-1">
-                    {errors.author.message}
+                    {errors.category.message}
                   </p>
                 )}
               </div>

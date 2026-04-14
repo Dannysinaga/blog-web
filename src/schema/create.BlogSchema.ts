@@ -5,7 +5,7 @@ export const createBlogSchema = z.object({
   description: z
     .string("Description is required")
     .min(1, "Description cannot be empty"),
-  author: z.string("Author is required").min(1, "Author cannot be empty"),
+  category: z.string("Category is reqired").min(1, "Category cannot be empty"),
   thumbnail: z
     .instanceof(File, { message: "Thumbnail must be a file" })
     .refine((file) => file.size > 0, "Thumbnail is required"),
