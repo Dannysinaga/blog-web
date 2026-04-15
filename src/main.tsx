@@ -12,6 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
 
 const router = createBrowserRouter([
   {
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
   {
     path: "/blogs/:slug",
     element: <BlogDetail />,
+  },
+  {
+    path: "/reset-password/:token",
+    element: <ResetPassword />,
   },
 ]);
 
